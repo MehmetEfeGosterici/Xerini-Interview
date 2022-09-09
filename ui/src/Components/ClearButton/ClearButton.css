@@ -1,0 +1,21 @@
+.clearButton{
+    z-index: 10;
+    position: absolute;
+    top:20px;
+    right:30px;
+    background-color: #EE675C;
+    border-radius: 10px;
+    border: 1px solid #b94034;
+    padding: 5px 35px;
+    color:white;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.clearButton:active{
+    background-color: #d45246;
+}
+
+button:focus{
+    outline: none;
+}

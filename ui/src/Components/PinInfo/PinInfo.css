@@ -1,0 +1,23 @@
+*{
+    font-size: 12px;
+}
+
+label{
+    font-size: 13px;
+}
+
+.infoContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    bottom: 25px;
+    border-radius: 10px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    width: 50%;
+    background: white;
+    border: 1px solid black;
+}
