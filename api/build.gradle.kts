@@ -3,6 +3,10 @@ plugins {
     kotlin("jvm") version "1.6.10"
 }
 
+tasks.test{
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation("org.slf4j:slf4j-api:1.7.36")
     implementation("ch.qos.logback:logback-core:1.2.11")
@@ -22,6 +26,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    testImplementation("org.hamcrest:hamcrest:2.2")
+    //testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    //testImplementation("org.hamcrest:hamcrest:2.2")
 }
