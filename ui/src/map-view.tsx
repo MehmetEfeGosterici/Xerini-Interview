@@ -9,9 +9,10 @@ import "ol/ol.css";
 import { FeatureLike } from "ol/Feature";
 import VectorLayer from "ol/layer/Vector";
 import { GeoJSON } from "ol/format";
-import { Icon, Style } from "ol/style";
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import PinInfo from "./Components/PinInfo/PinInfo";
 import ClearButton from "./Components/ClearButton/ClearButton";
+import { Coordinate } from "ol/coordinate";
 
 const geoJson = new GeoJSON()
 
@@ -20,6 +21,12 @@ const mapPinStyle = new Style({
         src: "/img/map-pin-blue.png",
         scale: 25 / 50,
         anchor: [0.5, 1.0]
+    }),
+    text: new Text({
+        font: 'bold 12px "Open Sans", "Arial Unicode MS", "sans-serif"',
+        placement: 'point',
+        fill: new Fill({ color: "#fff" }),
+        stroke: new Stroke({ color: '#000', width: 2 }),
     })
 });
 
@@ -37,6 +44,7 @@ interface ApiResponeModel extends Response {
     address: {
         railway: String
         road: String
+        suburb: String
         city_district: String
         city: String
         state_district: String
@@ -55,6 +63,7 @@ export const MapView: React.FC = () => {
     const [features, setFeatures] = useState<FeatureLike[]>([])
     const [clicked, setClicked] = useState<boolean>(false)
     const [displayData, setDisplayData] = useState<ApiRequestModel>({ long: "", lat: "", location: "", name: "" })
+    const [coordinates, setCoordinates] = useState<number[]>([])
 
     useEffect(() => {
         useGeographic()
@@ -84,9 +93,9 @@ export const MapView: React.FC = () => {
         }
     }, [map, features])
 
-    useEffect(()=>{
-
-    },[features])
+    useEffect(() => {
+        postAndFetchData(coordinates);
+    }, [displayData])
 
     const loadFeatureData = () => {
         fetch("/api/geo-json")
@@ -94,9 +103,14 @@ export const MapView: React.FC = () => {
             .then(json => setFeatures(geoJson.readFeatures(json)))
     }
 
+    var styleFunction = function (feature: any) {
+        mapPinStyle.getText().setText(feature.get('pointLabel'));
+        return mapPinStyle;
+    }
+
     const addFeatureLayer = (previousLayer: VectorLayer, features: FeatureLike[]): VectorLayer => {
         const newLayer = previousLayer ? previousLayer : new VectorLayer({
-            style: mapPinStyle
+            style: styleFunction
         });
 
         if (previousLayer != undefined) {
@@ -109,7 +123,8 @@ export const MapView: React.FC = () => {
 
         const source = new Vector({
             format: geoJson,
-            features: features as Feature<any>[]
+            features: features as Feature<any>[],
+
         });
 
         newLayer.setSource(source);
@@ -117,33 +132,61 @@ export const MapView: React.FC = () => {
         return newLayer
     }
 
-    const onMapClick = (e: MapBrowserEvent) => {
+    const postAndFetchData = (coordinates: number[]) => {
 
         fetch("api/geo-json/add", {
             method: "POST",
-            body: JSON.stringify(e.coordinate),
+            body: JSON.stringify({ coordinates: coordinates, pointLabel: displayData.name }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
         }).then(() => loadFeatureData())
+    }
+
+    const getLocationAddress = (address: String,displayName:String) => {
+        let response = '';
+        address.split(', ').forEach((item) => {
+            if (item === "undefined") return;
+            response += item + " ";
+        })
+        if (response === "") {
+            let strArray: String[] = [];
+            displayName.split(', ').forEach((item) => {
+                if (strArray.length < 3) {
+                    strArray.push(item + " ")
+                }
+                response = strArray.join("").trim().replace(" ",", ")
+            })
+                return response
+        }
+        return response;
+    };
+
+
+    const onMapClick = (e: MapBrowserEvent) => {
+        console.log(e)
+        setCoordinates(e.coordinate)
         fetch(`https://nominatim.openstreetmap.org/reverse.php?lat=${e.coordinate[1]}&lon=${e.coordinate[0]}&zoom=18&format=jsonv2`)
             .then(response => response.json())
-            .then((resp: ApiResponeModel) => setDisplayData({ lat: e.coordinate[1].toString(), long: e.coordinate[0].toString(), location: resp.display_name, name: resp.name }))
+            .then((resp: ApiResponeModel) => setDisplayData({ lat: e.coordinate[1].toString(), long: e.coordinate[0].toString(), location: resp.display_name, name: resp.name ? resp.name : getLocationAddress(`${resp.address.road}, ${resp.address.suburb}, ${resp.address.city_district}`,resp.display_name) }))
         setClicked(true)
+
     }
 
     const clearPinPoints = () => {
-        fetch("api/geo-json/clear",{
-            method:"DELETE",
+        fetch("api/geo-json/clear", {
+            method: "DELETE",
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
-            }}).then(()=>loadFeatureData())
-        
+            }
+        }).then(() => loadFeatureData())
+        setClicked(false)
+
     }
 
     return <div>
-        <ClearButton onClick={()=>clearPinPoints()}/>
+        <ClearButton onClick={() => clearPinPoints()} />
         <div id="map" style={{ height: window.innerHeight, width: window.innerWidth }} />
-        <PinInfo isVisible={clicked} data={displayData} setIsVisible={()=>setClicked(!clicked)} />
+        <PinInfo isVisible={clicked} data={displayData} setIsVisible={() => setClicked(!clicked)} />
     </div>
 }

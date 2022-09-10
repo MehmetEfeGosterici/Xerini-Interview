@@ -39,8 +39,8 @@ class GeoJsonService {
     @Path("/add")
     @POST
     @Consumes(APPLICATION_JSON)
-    fun addPoint(coordinates: List<Double>): Response {
-        val geoJsonFeature: GeoJsonFeature = GeoJsonFeature(GeometryData((coordinates)), mapOf<String, Any>(Pair("key", "value")))
+    fun addPoint(requestBody: RequestBody): Response {
+        val geoJsonFeature: GeoJsonFeature = GeoJsonFeature(GeometryData((requestBody.coordinates)), mapOf<String, Any>(Pair("pointLabel", requestBody.pointLabel)))
         if (File("api/src/main/resources/data.txt").readText().isEmpty()) {
             File("api/src/main/resources/data.txt").appendText(GsonUtil.gson.toJson(geoJsonFeature))
             return Response.ok().build()
@@ -51,7 +51,7 @@ class GeoJsonService {
 
     @Path("/clear")
     @DELETE
-    fun clearPoints():Response{
+    fun clearPoints(): Response {
         val geoJsonFeature: GeoJsonFeature = GeoJsonFeature(GeometryData(listOf()), mapOf<String, Any>(Pair("key", "value")))
         File("api/src/main/resources/data.txt").writeText("")
         File("api/src/main/resources/data.txt").appendText(GsonUtil.gson.toJson(geoJsonFeature))
@@ -70,3 +70,5 @@ data class GeoJsonFeature(val geometry: GeometryData?, val properties: Map<Strin
 data class GeometryData(val coordinates: List<Double>) {
     val type: String = "Point"
 }
+
+data class RequestBody(val coordinates: List<Double>, val pointLabel: String) {}
