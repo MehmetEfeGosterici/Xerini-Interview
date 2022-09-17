@@ -26,8 +26,6 @@ class GeoJsonService {
     @GET
     @Produces(APPLICATION_JSON)
     fun getGeoJson(): String {
-        //println(File("api/src/main/resources/data.txt").readText())
-        // GeoJsonObject(listOf(GeoJsonFeature(GeometryData(listOf(101.43,203.8)), mapOf<String,Any>(Pair("a","b")))))
         var geoJsonObject = GeoJsonObject(listOf())
         val geoJsonFeatureArray: List<String> = File("api/src/main/resources/data.txt").readText().split("|")
         for (geoJsonFeature in geoJsonFeatureArray) {

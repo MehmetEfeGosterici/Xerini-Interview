@@ -26,7 +26,7 @@ class GeoJsonServiceTest {
 
     @Test
     fun `returns geo-json coordinate data`(){
-        val result = geoJsonService.addPoint(listOf(1.0,2.0)).status
+        val result = geoJsonService.addPoint(RequestBody(listOf(1.0,2.0),"test String")).status
         assertEquals(200,result)
     }
 
